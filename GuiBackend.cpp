@@ -6,6 +6,11 @@ GuiBackend::GuiBackend(QObject *parent)
 
 }
 
+void GuiBackend::emitConnectToDevice()
+{
+    emit connectToDevice();
+}
+
 void GuiBackend::emitStartOperation()
 {
     emit startOperation(m_fullFileName);

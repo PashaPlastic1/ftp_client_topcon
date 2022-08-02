@@ -5,6 +5,7 @@
 
 #include <QTcpSocket>
 #include <QThread>
+#include <queue>
 
 namespace DeviceChecker {
 
@@ -17,6 +18,18 @@ struct FtpConnectionData : public DeviceConnectionData {
         , m_userName(userName)
         , m_password(password)
     {}
+    FtpConnectionData()
+        : DeviceConnectionData(DeviceType::Ftp)
+        , m_url()
+        , m_userName()
+        , m_password()
+    {}
+    FtpConnectionData(const FtpConnectionData &another)
+        : DeviceConnectionData(DeviceType::Ftp)
+        , m_url(another.m_url)
+        , m_userName(another.m_userName)
+        , m_password(another.m_password)
+    {}
 
     QString m_url;
     QString m_userName;
@@ -26,7 +39,9 @@ struct FtpConnectionData : public DeviceConnectionData {
 class FtpConnectionWorker : public QObject {
     Q_OBJECT
 public:
-    explicit FtpConnectionWorker(QObject *object = nullptr);
+    explicit FtpConnectionWorker(QObject *parent = nullptr)
+        : QObject(parent)
+    {}
     ~FtpConnectionWorker() {
         closeSocket();
     }
@@ -57,7 +72,7 @@ public:
         if (!m_tcpSocker.isOpen())
             return;
 
-        const QPair<QString, int> commandCode {"QUIT", 221};
+        const QPair<QString, QString> commandCode {"QUIT", "221"};
 
         if (!sendCommand(commandCode.first)) {
             emit message("Failed to quit from FTP server. ");
@@ -65,7 +80,7 @@ public:
         if (getResponse(commandCode.second)) {}
     }
 
-    void checkCommand(QPair<QString, int> command) {
+    void checkCommand(QPair<QString, QString> command) {
         if (!m_tcpSocker.isOpen()) {
             emit message("There's no connection.");
             emit commandChecked(command.first, false);
@@ -88,16 +103,16 @@ private:
         emit message("Trying to sign in with userName="
                      + m_ftpConnectionData.m_userName + "...");
 
-        const QPair<QString, int> userCommand {
-            "USER "+ m_ftpConnectionData.m_userName, 331
+        const QPair<QString, QString> userCommand {
+            "USER "+ m_ftpConnectionData.m_userName, "331"
         };
 
         if (!sendCommand(userCommand.first) ||
                 !getResponse(userCommand.second))
             return false;
 
-        const QPair<QString, int> passCommand {
-            "PASS "+ m_ftpConnectionData.m_password, 230
+        const QPair<QString, QString> passCommand {
+            "PASS "+ m_ftpConnectionData.m_password, "230"
         };
 
         if (!sendCommand(passCommand.first) ||
@@ -118,10 +133,13 @@ private:
         return true;
     }
 
-    bool getResponse(int expectedResponseCode = -1) {
-        if (expectedResponseCode != -1
-                || expectedResponseCode < 100
-                || expectedResponseCode > 599) {
+    bool getResponse(const QString &expectedResponseCode = "") {
+        bool isNumber;
+        int code = expectedResponseCode.toInt(&isNumber);
+        if (!expectedResponseCode.isEmpty()
+                || !isNumber
+                || code < 100
+                || code > 599) {
             emit message("Wrong expected response code on command");
             return false;
         }
@@ -138,11 +156,11 @@ private:
 
             int codeSize = 3;
 
-            if (expectedResponseCode != -1 && responseData.size() > 4
-                    && responseData.mid(0, codeSize).toInt() != expectedResponseCode) {
-                emit message("FAILED. Expected respons code is "
-                             + QString::number(expectedResponseCode)
-                             + ", but got " + responseData.mid(0, 3).toInt());
+            if (!expectedResponseCode.isEmpty() && responseData.size() >= expectedResponseCode.size()
+                    && responseData.mid(0, expectedResponseCode.size()).compare(expectedResponseCode.toUtf8())) {
+                emit message("FAILED. Expected response is \""
+                             + expectedResponseCode
+                             + "\", but got \"" + responseData.mid(0, 3).toInt() + "\"");
                 return false;
             }
 
@@ -187,11 +205,18 @@ class FtpServerChecker : public AbstractDeviceChecker
     Q_OBJECT
 public:
     explicit FtpServerChecker(QObject *parent = nullptr);
+    ~FtpServerChecker();
 
     // AbstractDeviceChecker interface
     void connectToDevice(const DeviceConnectionData &deviceData) override;
-    void checkCommands(const QString &fileName) override;
+    void checkCommands(const QVector<QPair<QString, QString>> &commands) override;
     void closeConnection() override;
+
+private:
+signals:
+    void signalConnectToDevice(DeviceChecker::FtpConnectionData);
+    void signalDisconnect();
+    void signalCheckCommand(QPair<QString, QString>);
 
 private:
     void onCommandChecked(QString command, bool success);
@@ -199,6 +224,10 @@ private:
 private:
     FtpConnectionWorker *m_connectionWorker = nullptr;
     QThread m_workerThread;
+
+    int m_commandSize {0};
+    int m_commandCounter{0};
+    std::queue<QPair<QString, QString>> m_commandQueue;
 };
 
 }

@@ -2,19 +2,30 @@
 #define BACKENDMEDIATOR_H
 
 #include <QObject>
-#include "GuiBackend.h"
+#include <QQmlContext>
+
+class GuiBackend;
+
+namespace DeviceChecker {
+class AbstractDeviceChecker;
+}
+
+class ScriptFileParser;
 
 class BackendMediator : public QObject
 {
     Q_OBJECT
 public:
-    explicit BackendMediator(QObject *parent = nullptr);
+    explicit BackendMediator(QQmlContext *qmlContext, QObject *parent = nullptr);
+
+    void connectInit();
 
 signals:
 
 private:
-    GuiBackend guiBackend;
-
+    GuiBackend *m_guiBackend = nullptr;
+    DeviceChecker::AbstractDeviceChecker *m_deviceChecker = nullptr;
+    ScriptFileParser *m_scriptParser = nullptr;
 };
 
 #endif // BACKENDMEDIATOR_H

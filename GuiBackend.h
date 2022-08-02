@@ -13,6 +13,7 @@ class GuiBackend : public QObject
 public:
     explicit GuiBackend(QObject *parent = nullptr);
 
+    Q_INVOKABLE void emitConnectToDevice();
     Q_INVOKABLE void emitStartOperation();
 
     const QString &serverUrl() const;
@@ -33,6 +34,7 @@ signals:
     void passwordChanged();
     void fullFileNameChanged();
 
+    void connectToDevice();
     void startOperation(const QString &comandsFileName);
 
 private:

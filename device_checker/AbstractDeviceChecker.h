@@ -32,13 +32,13 @@ public:
     virtual ~AbstractDeviceChecker(){}
 
     virtual void connectToDevice(const DeviceConnectionData &deviceData) = 0;
-    virtual void checkCommands(const QString &fileName) = 0;
+    virtual void checkCommands(const QVector<QPair<QString, QString>> &fileName) = 0;
     virtual void closeConnection() = 0;
 
 signals:
     void serviceMsg(const QString &msg);
     void deviceResponse(const QString &response);
-
+    void allCommandsChecked(const QPair<int, int> &counter);
 };
 
 }

@@ -24,6 +24,8 @@ set(PROJECT_SOURCES
         device_checker/AbstractDeviceChecker.cpp
         device_checker/FtpServerChecker.h
         device_checker/FtpServerChecker.cpp
+        device_checker/ScriptFileParser.h
+        device_checker/ScriptFileParser.cpp
         qml.qrc
 )
 
