@@ -13,6 +13,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Network)
+#target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 set(PROJECT_SOURCES
         main.cpp

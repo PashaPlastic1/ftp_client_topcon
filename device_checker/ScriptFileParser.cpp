@@ -15,7 +15,7 @@ void ScriptFileParser::parseFile(const QString &fileName)
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         int parity = 1;
         while (!file.atEnd()) {
-            auto line = file.readLine();
+            QString line = file.readLine().trimmed();
 
             if (parity % 2 != 0)
                 comands.append({line, ""});

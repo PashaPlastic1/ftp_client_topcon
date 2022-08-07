@@ -23,9 +23,11 @@ class AbstractDeviceChecker : public QObject
 {
     Q_OBJECT
 public:
-    enum Errors {
-        ConnectError = 0,
-        CheckEroor
+    enum ConnectionStates {
+        WaitConnection = 0,
+        Connected,
+        ConnectionError,
+        SignInError,
     };
 
     explicit AbstractDeviceChecker(QObject *parent = nullptr);
@@ -36,6 +38,7 @@ public:
     virtual void closeConnection() = 0;
 
 signals:
+    void connectionStateChanged(ConnectionStates state);
     void serviceMsg(const QString &msg);
     void deviceResponse(const QString &response);
     void allCommandsChecked(const QPair<int, int> &counter);

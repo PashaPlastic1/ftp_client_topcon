@@ -13,6 +13,7 @@ class GuiBackend : public QObject
 public:
     explicit GuiBackend(QObject *parent = nullptr);
 
+    // From GUI
     Q_INVOKABLE void emitConnectToDevice();
     Q_INVOKABLE void emitStartOperation();
 
@@ -28,6 +29,10 @@ public:
     const QString &fullFileName() const;
     void setFullFileName(const QString &newFullFileName);
 
+    // To GUI
+    void setServiceMessage(const QString &msg);
+    void setDeviceResponse(const QString &response);
+
 signals:
     void serverUrlChanged();
     void userNameChanged();
@@ -37,10 +42,13 @@ signals:
     void connectToDevice();
     void startOperation(const QString &comandsFileName);
 
+    void serviceMessage(const QString &msg);
+    void deviceResponse(const QString &response);
+
 private:
-    QString m_serverUrl;
-    QString m_userName;
-    QString m_password;
+    QString m_serverUrl{"ftp.gnu.org"};
+    QString m_userName{"anonymous"};
+    QString m_password{"test@mail.ru"};
     QString m_fullFileName;
 };
 

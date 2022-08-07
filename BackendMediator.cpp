@@ -13,6 +13,8 @@ BackendMediator::BackendMediator(QQmlContext *qmlContext, QObject *parent)
     , m_scriptParser(new ScriptFileParser(this))
 {
     qRegisterMetaType<GuiBackend*>();
+    qRegisterMetaType<FtpConnectionData>();
+    qRegisterMetaType<QPair<QString,QString>>();
     qmlContext->setContextProperty("GuiBackend", m_guiBackend);
 
     connectInit();
@@ -20,6 +22,7 @@ BackendMediator::BackendMediator(QQmlContext *qmlContext, QObject *parent)
 
 void BackendMediator::connectInit()
 {
+    //---------FROM-GUI-----------------
     connect(m_guiBackend, &GuiBackend::connectToDevice,
             this, [&](){
         FtpConnectionData connectionData{m_guiBackend->serverUrl(),
@@ -27,5 +30,25 @@ void BackendMediator::connectInit()
                     m_guiBackend->password()};
 
         m_deviceChecker->connectToDevice(connectionData);
+    });
+    connect(m_guiBackend, &GuiBackend::startOperation,
+            m_scriptParser, &ScriptFileParser::parseFile);
+
+    //---------FROM-FILE-PARSER----------
+    connect(m_scriptParser, &ScriptFileParser::fileParsed,
+            m_deviceChecker, &AbstractDeviceChecker::checkCommands);
+    connect(m_scriptParser, &ScriptFileParser::serviceMsg,
+            m_guiBackend, &GuiBackend::setServiceMessage);
+
+    //---------FROM-DEVICE---------------
+    connect(m_deviceChecker, &AbstractDeviceChecker::serviceMsg,
+            m_guiBackend, &GuiBackend::setServiceMessage);
+    connect(m_deviceChecker, &AbstractDeviceChecker::deviceResponse,
+            m_guiBackend, &GuiBackend::setDeviceResponse);
+    connect(m_deviceChecker, &AbstractDeviceChecker::allCommandsChecked,
+            this, [&](const QPair<int, int> &counter){
+        m_guiBackend->setServiceMessage("\nAll commands are checked: "
+                                        + QString::number(counter.first) + "/"
+                                        + QString::number(counter.second) + " PASSED");
     });
 }

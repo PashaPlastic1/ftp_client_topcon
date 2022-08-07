@@ -10,7 +10,7 @@ FtpServerChecker::FtpServerChecker(QObject *parent)
 
 FtpServerChecker::~FtpServerChecker()
 {
-    closeConnection();
+    FtpServerChecker::closeConnection();
 }
 
 void FtpServerChecker::connectToDevice(const DeviceConnectionData &deviceData)
@@ -29,6 +29,8 @@ void FtpServerChecker::connectToDevice(const DeviceConnectionData &deviceData)
             this, [&](QString response) {emit deviceResponse(response);});
     connect(m_connectionWorker, &FtpConnectionWorker::commandChecked,
             this, &FtpServerChecker::onCommandChecked);
+    connect(m_connectionWorker, &FtpConnectionWorker::connectionError,
+            this, &FtpServerChecker::closeConnection);
 
     connect(this, &FtpServerChecker::signalConnectToDevice,
             m_connectionWorker, &FtpConnectionWorker::connect);
@@ -36,6 +38,8 @@ void FtpServerChecker::connectToDevice(const DeviceConnectionData &deviceData)
             m_connectionWorker, &FtpConnectionWorker::closeConnect);
     connect(this, &FtpServerChecker::signalCheckCommand,
             m_connectionWorker, &FtpConnectionWorker::checkCommand);
+    connect(this, &FtpServerChecker::clearBuffer,
+            m_connectionWorker, &FtpConnectionWorker::clearBuffer);
 
     m_workerThread.start();
 
@@ -44,6 +48,20 @@ void FtpServerChecker::connectToDevice(const DeviceConnectionData &deviceData)
 
 void FtpServerChecker::checkCommands(const QVector<QPair<QString, QString>> &commands)
 {
+    if (!m_connectionWorker) {
+        emit serviceMsg("Client is not connected to FTP server."
+                        " Please fill url/ip, user name, password and click SIGN IN");
+        return;
+    }
+
+    if (commands.empty()) {
+        emit serviceMsg("Got empty list of command. "
+                        "Check the file or contact the developer.");
+        return;
+    }
+
+    emit clearBuffer();
+
     for (auto &command : commands)
         m_commandQueue.push(command);
 
@@ -73,6 +91,5 @@ void FtpServerChecker::onCommandChecked(QString command, bool success)
         emit allCommandsChecked({m_commandCounter, m_commandSize});
         m_commandCounter = 0;
         m_commandSize = 0;
-        closeConnection();
     }
 }

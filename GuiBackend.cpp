@@ -73,3 +73,13 @@ void GuiBackend::setFullFileName(const QString &newFullFileName)
     emit fullFileNameChanged();
 }
 
+void GuiBackend::setServiceMessage(const QString &msg)
+{
+    emit serviceMessage(msg);
+}
+
+void GuiBackend::setDeviceResponse(const QString &response)
+{
+    emit deviceResponse(response);
+}
+

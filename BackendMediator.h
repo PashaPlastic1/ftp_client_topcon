@@ -20,8 +20,6 @@ public:
 
     void connectInit();
 
-signals:
-
 private:
     GuiBackend *m_guiBackend = nullptr;
     DeviceChecker::AbstractDeviceChecker *m_deviceChecker = nullptr;

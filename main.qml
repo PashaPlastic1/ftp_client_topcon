@@ -3,6 +3,7 @@ import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls.Material 2.15
+import Qt.labs.platform 1.1
 
 ApplicationWindow {
     width: 640
@@ -10,9 +11,20 @@ ApplicationWindow {
     visible: true
     title: qsTr("ftp client")
 
+    Connections {
+        target: GuiBackend
+        function onServiceMessage(msg) {
+            outputArea.text = outputArea.text + msg + "\n";
+        }
+        function onDeviceResponse(msg) {
+            outputArea.text = outputArea.text + ">> " + msg + "\n";
+        }
+    }
+
     GridLayout {
         property int rowHeight: 44
         anchors.fill: parent
+        anchors.margins: 5
 
         columns: 3
 
@@ -22,6 +34,9 @@ ApplicationWindow {
             Layout.preferredHeight: parent.rowHeight
             Layout.columnSpan: 2
             placeholderTextColor : Material.color(Material.Grey)
+            selectByMouse: true
+            text: GuiBackend.serverUrl
+            onEditingFinished: GuiBackend.serverUrl = text
 
             placeholderText: "FTP server ip or url"
         }
@@ -30,10 +45,13 @@ ApplicationWindow {
             id: signInButton
             text: "sign in"
             Layout.fillWidth: true
+            enabled: serverUrlField.text
+                        && userNameField.text
+                        && passwordField.text
 
-//            Layout.row: 0
-//            Layout.column: 2
             Layout.rowSpan: 2
+
+            onClicked: GuiBackend.emitConnectToDevice()
         }
 
         TextField {
@@ -41,6 +59,9 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.preferredHeight: parent.rowHeight
             placeholderTextColor : Material.color(Material.Grey)
+            selectByMouse: true
+            text: GuiBackend.userName
+            onEditingFinished: GuiBackend.userName = text
 
             placeholderText: "user name"
         }
@@ -50,6 +71,9 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.preferredHeight: parent.rowHeight
             placeholderTextColor : Material.color(Material.Grey)
+            selectByMouse: true
+            text: GuiBackend.password
+            onEditingFinished: GuiBackend.password = text
 
             placeholderText: "password"
         }
@@ -61,7 +85,10 @@ ApplicationWindow {
             Layout.columnSpan: 2
             Layout.preferredHeight: parent.rowHeight
             placeholderTextColor : Material.color(Material.Grey)
-
+            selectByMouse: true
+            text: GuiBackend.fullFileName
+            onTextChanged: GuiBackend.fullFileName = text
+            onEditingFinished: GuiBackend.fullFileName = text
 
             placeholderText: "enter the full file name"
         }
@@ -70,6 +97,19 @@ ApplicationWindow {
             id: browseButton
             text: "browse..."
             Layout.fillWidth: true
+
+            onClicked: fileDialog.open()
+
+            FileDialog {
+                id: fileDialog
+                defaultSuffix: "fdk"
+                fileMode: FileDialog.OpenFile
+                title: "Выберите файл"
+                nameFilters: ["(*.txt)"]
+                onAccepted: {
+                    fileNameField.text = file.toString().slice(8);
+                }
+            }
         }
 
         Button {
@@ -77,16 +117,27 @@ ApplicationWindow {
             text: "start"
             Layout.fillWidth: true
             Layout.columnSpan: 3
+
+            enabled: serverUrlField.text
+                        && userNameField.text
+                        && passwordField.text
+                        && fileNameField.text
+
+            onClicked: GuiBackend.emitStartOperation()
         }
 
-        TextArea {
-            id: outputArea
+        ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.columnSpan: 3
+            TextArea {
+                id: outputArea
 
-            readOnly: true
+                selectByMouse: true
 
+                readOnly: true
+
+            }
         }
     }
 }
