@@ -3,6 +3,9 @@
 
 #include <QObject>
 
+/*!
+    \brief Класс для взаимодействия с qml-слоем
+*/
 class GuiBackend : public QObject
 {
     Q_OBJECT
@@ -14,7 +17,10 @@ public:
     explicit GuiBackend(QObject *parent = nullptr);
 
     // From GUI
+    //! Эмитет сигнал для подключения к устройству
     Q_INVOKABLE void emitConnectToDevice();
+    //! Эмитет сигнал для запуска подготовленного
+    //! сценария тестирования устройства
     Q_INVOKABLE void emitStartOperation();
 
     const QString &serverUrl() const;
@@ -30,7 +36,9 @@ public:
     void setFullFileName(const QString &newFullFileName);
 
     // To GUI
+    //! Отправить на GUI сервисное сообщение (не от устройтва)
     void setServiceMessage(const QString &msg);
+    //! Отправить на GUI ответ от устройства
     void setDeviceResponse(const QString &response);
 
 signals:
@@ -39,10 +47,18 @@ signals:
     void passwordChanged();
     void fullFileNameChanged();
 
+    //! Сигнал для подключения к устройству
     void connectToDevice();
+    //! Сигнал для запуска подготовленного
+    //! сценария тестирования устройства
+    //! \param[in] comandsFileName - полное имя файла со сценарием
     void startOperation(const QString &comandsFileName);
 
+    //! Отправиляет на GUI сервисное сообщение (не от устройтва)
+    //! \param[in] msg - сообщение
     void serviceMessage(const QString &msg);
+    //! Отправиляет на GUI ответ от устройства
+    //! \param[in] msg - ответ от устройства
     void deviceResponse(const QString &response);
 
 private:

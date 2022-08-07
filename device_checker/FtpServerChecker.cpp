@@ -1,5 +1,7 @@
 #include "FtpServerChecker.h"
 
+#include "FtpConnectionWorker.h"
+
 using namespace DeviceChecker;
 
 FtpServerChecker::FtpServerChecker(QObject *parent)

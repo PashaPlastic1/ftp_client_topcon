@@ -15,9 +15,11 @@ ApplicationWindow {
         target: GuiBackend
         function onServiceMessage(msg) {
             outputArea.text = outputArea.text + msg + "\n";
+            areaFlick.contentY = areaFlick.contentHeight - areaFlick.height
         }
         function onDeviceResponse(msg) {
             outputArea.text = outputArea.text + ">> " + msg + "\n";
+            areaFlick.contentY = areaFlick.contentHeight - areaFlick.height
         }
     }
 
@@ -126,11 +128,13 @@ ApplicationWindow {
             onClicked: GuiBackend.emitStartOperation()
         }
 
-        ScrollView {
+        Flickable {
+            id: areaFlick
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.columnSpan: 3
-            TextArea {
+            flickableDirection: Flickable.VerticalFlick
+            TextArea.flickable: TextArea {
                 id: outputArea
 
                 selectByMouse: true
@@ -138,6 +142,7 @@ ApplicationWindow {
                 readOnly: true
 
             }
+            ScrollBar.vertical: ScrollBar {}
         }
     }
 }
